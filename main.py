@@ -15,7 +15,7 @@ app = Flask(__name__)
 # Define routes for web application
 @app.route('')
 def index():
-    return render_template('index.html')
+    return render_template('index.htsml')
 
 @app.route('traffic')
 def show_traffic():
