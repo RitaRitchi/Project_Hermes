@@ -1,7 +1,10 @@
 import requests
+import json
 from flask import Flask, render_template, jsonify
 
 app = Flask(__name__)
+
+api_key = ""
 
 # Function to get real-time flight data from OpenSky Network API
 def get_flight_data():
@@ -31,18 +34,16 @@ def process_flight_data(data):
                 })
     return flights
 
-# Placeholder function to get real-time maritime data
-def get_vessel_data():
-    # For real implementation, use a proper maritime API like MarineTraffic with a valid API key
-    # url = "https://example-maritime-api.com/vessel-data"  # Replace with actual maritime API URL
-    # response = requests.get(url)
+# Function to get real-time maritime data from MarineTraffic API
+def get_vessel_data(api_key):
+    url = f"http://services.marinetraffic.com/api/exportvesseltrack/v:2/{api_key}/timespan:10/protocol:jsono"
+    response = requests.get(url)
     
-    # Sample data for illustration purposes
-    data = [
-        {'MMSI': '123456789', 'SHIPNAME': 'Sample Vessel 1', 'LAT': 37.7749, 'LON': -122.4194, 'SPEED': 14, 'COURSE': 180, 'STATUS': 'Underway'},
-        {'MMSI': '987654321', 'SHIPNAME': 'Sample Vessel 2', 'LAT': 40.7128, 'LON': -74.0060, 'SPEED': 10, 'COURSE': 90, 'STATUS': 'At Anchor'}
-    ]
-    return data
+    if response.status_code == 200:
+        return response.json()
+    else:
+        print(f"Error: Unable to fetch vessel data (status code: {response.status_code})")
+        return None
 
 # Function to process and filter vessel data
 def process_vessel_data(data):
@@ -65,7 +66,7 @@ def index():
     return render_template('index.html')
 
 @app.route('/data')
-def data():
+def flight_data():
     flight_data = get_flight_data()
     flights = process_flight_data(flight_data)
     
@@ -73,6 +74,17 @@ def data():
     vessels = process_vessel_data(vessel_data)
     
     return jsonify({'flights': flights, 'vessels': vessels})
+
+@app.route('/data')
+def marine_data():
+    api_key = "YOUR_MARINETRAFFIC_API_KEY"
+    vessel_data = get_vessel_data(api_key)
+    vessels = process_vessel_data(vessel_data)
+    
+    return jsonify({'vessels': vessels})
+
+if __name__ == '__main__':
+    app.run(debug=True)
 
 if __name__ == '__main__':
     app.run(debug=True)
